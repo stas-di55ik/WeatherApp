@@ -10,7 +10,7 @@ import { H1, H2, P } from '../components/Text';
 
 import { format } from 'date-fns';
 
-const city = 'Kyiv';
+const defaultCity = 'Kyiv';
 
 const groupForecastByDay = list => {
     const data = {};
@@ -49,22 +49,23 @@ export default class Details extends React.Component {
     };
 
     componentDidMount() {
-        // navigator.geolocation.getCurrentPosition(postion => {
-        //     console.log(`Position: ${position}`);
-        //     this.getCurrentWeather({ coords: position.coords });
-        //     this.getForecast({ coords: info.coords });
-        // });
+        this.getCurrentWeather(defaultCity);
+        this.getForecast(defaultCity);
+    }
 
-        // this.getLocation();
-
-        const weatherResponse = this.getCurrentWeather({ city });
-        const forecastResponse = this.getForecast({ city });
+    componentDidUpdate(prevProps) {
+        const { route } = this.props;
+        const prevCity = prevProps.route.params?.city;
+        const city = route.params?.city;
+        if (city && prevCity !== city) {
+            this.getCurrentWeather(city);
+            this.getForecast(city);
+        }
     }
 
     getLocation = async () => {
         try {
             const status = await Location.requestForegroundPermissionsAsync();
-            // console.log(status.granted);
             if (status.granted) {
                 await Location.enableNetworkProviderAsync();
                 IntentLauncher.startActivityAsync(
@@ -80,18 +81,17 @@ export default class Details extends React.Component {
         }
     };
 
-    getCurrentWeather = ({ city /*zipcode*/, coords }) => {
-        return weatherApi('/weather', { city, coords })
+    getCurrentWeather = (city) => {
+        return weatherApi('/weather', city)
             .then(response => {
-                // console.log(`Weather response:\n${JSON.stringify(response)}`);
-                this.props.navigation.setParams({ title: response.name });
+                this.props.navigation.setParams({ city: response.name });
                 this.setState({ currentWeather: response, loadingCurrentWeather: false });
             })
             .catch(err => console.log(`Weather error:\n${err}`));
     };
 
-    getForecast = ({ city /*zipcode*/, coords }) => {
-        return weatherApi('/forecast', { city, coords })
+    getForecast = (city) => {
+        return weatherApi('/forecast', city)
             .then(response => {
                 this.setState({
                     loadingForecast: false,

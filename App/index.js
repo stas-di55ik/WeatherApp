@@ -35,7 +35,7 @@ export default function App() {
                     name="Details"
                     component={Details}
                     options={({ navigation, route }) => ({
-                        headerTitle: route.params && route.params.title ? route.params.title : 'Default Title',
+                        headerTitle: route.params && route.params.city ? route.params.city : 'Default Title',
                         headerRight: () => (
                             <HeaderRightButton
                                 icon={require('./assets/search.png')}
