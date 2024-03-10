@@ -9,6 +9,7 @@ import { BasicRow } from '../components/List';
 import { H1, H2, P } from '../components/Text';
 
 import { format } from 'date-fns';
+import { addRecentSearch, removeAllItems } from "../util/recentSearch";
 
 const defaultCity = 'Kyiv';
 
@@ -99,6 +100,8 @@ export default class Details extends React.Component {
                 } else {
                     this.props.navigation.setParams({ city: response.name });
                     this.setState({ currentWeather: response, loadingCurrentWeather: false });
+                    addRecentSearch(response.name);
+                    // removeAllItems();
                 }
             })
             .catch(err => console.log(`Weather error:\n${err}`));

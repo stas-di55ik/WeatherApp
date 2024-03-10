@@ -35,7 +35,6 @@ export const SearchBar = ({
         fontSize: 18,
         flex: 1
       }}
-      keyboardType="number-pad"
       {...props}
     />
     <TouchableOpacity onPress={onSearch} disabled={!searchButtonEnabled}>
