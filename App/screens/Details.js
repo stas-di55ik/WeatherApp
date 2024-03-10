@@ -3,7 +3,7 @@ import { weatherApi } from "../util/weatherAPI";
 import * as Location from 'expo-location';
 
 import { Container } from '../components/Container';
-import { ActivityIndicator, ScrollView, SafeAreaView, View } from "react-native";
+import { ActivityIndicator, ScrollView, SafeAreaView, View, Alert } from "react-native";
 import { WeatherIcon } from '../components/WeatherIcon';
 import { BasicRow } from '../components/List';
 import { H1, H2, P } from '../components/Text';
@@ -46,6 +46,7 @@ export default class Details extends React.Component {
         loadingCurrentWeather: true,
         forecast: [],
         loadingForecast: true,
+        prevCity: null,
     };
 
     componentDidMount() {
@@ -58,6 +59,7 @@ export default class Details extends React.Component {
         const prevCity = prevProps.route.params?.city;
         const city = route.params?.city;
         if (city && prevCity !== city) {
+            this.setState({ prevCity: prevCity });
             this.getCurrentWeather(city);
             this.getForecast(city);
         }
@@ -81,11 +83,23 @@ export default class Details extends React.Component {
         }
     };
 
+    handleError = () => {
+        this.props.navigation.setParams({ city: this.state.prevCity });
+        Alert.alert('No location data found!', 'Please try again', [{
+            text: 'Okay',
+            onPress: () => this.props.navigation.navigate('Search')
+        }]);
+    };
+
     getCurrentWeather = (city) => {
         return weatherApi('/weather', city)
             .then(response => {
-                this.props.navigation.setParams({ city: response.name });
-                this.setState({ currentWeather: response, loadingCurrentWeather: false });
+                if (response.cod === '404') {
+                    this.handleError();
+                } else {
+                    this.props.navigation.setParams({ city: response.name });
+                    this.setState({ currentWeather: response, loadingCurrentWeather: false });
+                }
             })
             .catch(err => console.log(`Weather error:\n${err}`));
     };
@@ -93,10 +107,12 @@ export default class Details extends React.Component {
     getForecast = (city) => {
         return weatherApi('/forecast', city)
             .then(response => {
-                this.setState({
-                    loadingForecast: false,
-                    forecast: groupForecastByDay(response.list)
-                });
+                if (response.cod !== '404') {
+                    this.setState({
+                        loadingForecast: false,
+                        forecast: groupForecastByDay(response.list)
+                    });
+                }
             })
             .catch(err => console.log(`Forecast error:\n${err}`));
     };
